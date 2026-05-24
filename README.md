@@ -1,47 +1,72 @@
-# AI-Powered Observability on GKE: Query Grafana with Gemini CLI & Gemini Extensions
+# AI-Powered Observability on GKE: Query Grafana with Gemini CLI & MCP Extensions
 
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-blue.svg?logo=kubernetes&style=flat-square)](#)
 [![Grafana](https://img.shields.io/badge/Grafana-10.0.0-orange.svg?logo=grafana&style=flat-square)](#)
 [![Prometheus](https://img.shields.io/badge/Prometheus-v2.45.0-red.svg?logo=prometheus&style=flat-square)](#)
-[![Gemini](https://img.shields.io/badge/Gemini-Extensions--MCP-purple.svg?logo=google-gemini&style=flat-square)](#)
+[![Gemini](https://img.shields.io/badge/Gemini_CLI-MCP_Extensions-purple.svg?logo=google-gemini&style=flat-square)](#)
 
-This repository contains the complete demo architecture, manifests, and live scripts for the **GrafanaCon** session: 
-**"AI-Powered Observability on GKE: Query Grafana with Gemini CLI & Gemini Extensions"**.
+> **📍 Presented at GrafanaCon by [Sanket Bisne](https://github.com/sanketbisne)** — Cloud / DevOps / Platform Engineer
 
-This session demonstrates how modern SREs and DevOps engineers can build an AI-driven, conversational observability platform. By deploying Prometheus and Grafana on Google Kubernetes Engine (GKE) and connecting them to **Gemini CLI** via the **Model Context Protocol (MCP)**, you can troubleshoot incidents, query metrics, and manage dashboards using pure natural language.
+## 💡 What is this?
+
+Ever wished you could just *ask* your monitoring system what's going on instead of clicking through dashboards? That's exactly what this project does.
+
+This repo sets up a complete **Kubernetes observability stack** (Prometheus + Grafana) on **Google Kubernetes Engine (GKE)** and connects it to **Gemini CLI** — Google's AI-powered command-line tool. Using the [Grafana MCP Server](https://github.com/grafana/mcp-grafana) extension, you can talk to your dashboards, query metrics, and even create new dashboards — all through **natural language** in your terminal.
+
+### What can you do with it?
+
+| Instead of... | You just type... |
+|---|---|
+| Opening Grafana UI → navigating to dashboards → finding the right panel | *"List all my Grafana dashboards"* |
+| Writing PromQL queries manually in the Grafana explore tab | *"Show me CPU usage of all pods in the last 15 minutes"* |
+| Clicking through the UI to build a new dashboard | *"Create a dashboard for Nginx request metrics"* |
+| Checking who's on-call in Grafana OnCall | *"Who is currently on-call?"* |
+
+### Key Technologies
+
+| Technology | Role |
+|---|---|
+| **Google Kubernetes Engine (GKE)** | Hosts the entire observability stack |
+| **Prometheus** | Collects and stores metrics from Kubernetes nodes, pods, and applications |
+| **Grafana** | Visualizes metrics through dashboards and provides the API surface |
+| **Gemini CLI** | AI-powered terminal that understands natural language commands |
+| **Grafana MCP Server** | The bridge — translates Gemini's intent into Grafana API calls (52+ tools) |
 
 ---
+
 
 ## 🏗️ Architecture Overview
 
 The demo environment consists of a fully-provisioned observability sandbox running inside GKE:
 
+![Conversational Observability Flow](architecture.png)
+
 ```mermaid
 graph TD
-    subgraph GKE Cluster (Google Kubernetes Engine)
-        subgraph Applications
-            SA[Sample Nginx App]
-            NXE[Nginx Prometheus Exporter]
+    subgraph GKE["GKE Cluster (Google Kubernetes Engine)"]
+        subgraph Applications["Applications"]
+            SA["Sample Nginx App"]
+            NXE["Nginx Prometheus Exporter"]
         end
         
-        subgraph Monitoring
-            PROM[Prometheus Server]
-            GRAF[Grafana Dashboard]
+        subgraph Monitoring["Monitoring"]
+            PROM["Prometheus Server"]
+            GRAF["Grafana Dashboard"]
         end
         
-        SA -- Exposes stub_status --> NXE
-        PROM -- Scrapes Metrics --> NXE
-        PROM -- Scrapes Node & Pod cAdvisor --> PROM
-        GRAF -- Queries Metrics --> PROM
+        SA -- "Exposes stub_status" --> NXE
+        PROM -- "Scrapes Metrics" --> NXE
+        PROM -- "Scrapes Node & Pod cAdvisor" --> PROM
+        GRAF -- "Queries Metrics" --> PROM
     end
 
-    subgraph Developer Laptop
-        CLI[Gemini CLI]
-        MCP[mcp-grafana extension]
+    subgraph Dev["Developer Laptop"]
+        CLI["Gemini CLI"]
+        MCP["mcp-grafana extension"]
     end
 
     CLI <--> MCP
-    MCP -- API calls via HTTP (Port-forward/LoadBalancer) --> GRAF
+    MCP -- "API calls via HTTP (Port-forward/LoadBalancer)" --> GRAF
 ```
 
 ### Sandbox Components
@@ -270,14 +295,54 @@ If the live connection fails:
 
   Kubernetes Resource Usage (uid: k8s-resources)
   This dashboard is pre-provisioned via a ConfigMap and includes the following panels:
-   * CPU Usage by Pod: sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (pod)
-   * Memory Usage by Pod: sum(container_memory_working_set_bytes{container!=\"\"}) by (pod)
+   * CPU Usage by Pod: sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)
+   * Memory Usage by Pod: sum(container_memory_working_set_bytes{container!=""}) by (pod)
 ```
 
 **Why this is a killer talking point at GrafanaCon:**
 * **Local Parsing**: The agent autonomously notices `grafana.yaml` in the user's open files or active workspace directory.
 * **Intelligent Synthesis**: It parses the ConfigMap inside `grafana.yaml`, extracts the JSON definition of the dashboard (`Kubernetes Resource Usage` with UID `k8s-resources`), identifies the metric panels, and serves the user with the PromQL expressions directly.
 * **Hybrid Operation**: This demonstrates how Gemini blends live runtime connections with local code context for an uninterrupted SRE workspace experience.
+
+---
+
+## 🎙️ The Live Demo Storyline: SRE Step-by-Step Flow
+
+When presenting this live demo at **GrafanaCon**, this is the narrative flow that demonstrates the end-to-end synergy between the user, Gemini CLI, the local MCP extension, and GKE observability:
+
+![SRE Conversational Observability Flow](architecture.png)
+
+### 1. The SRE Laptop Setup
+An operator opens their laptop, opens the terminal, and starts a conversational session by running:
+```bash
+gemini
+```
+This opens the interactive **Gemini CLI** workspace, acting as the centralized command center for operations.
+
+### 2. Installing the Grafana Extension (Local MCP Host)
+To hook Gemini up to Grafana, the presenter runs:
+```bash
+gemini extensions install https://github.com/grafana/mcp-grafana
+```
+* **Under the hood**: This single command downloads, configures, and initializes the **Grafana MCP Server** locally on the SRE's laptop. The extension acts as a translator between Gemini's LLM reasoning and the Grafana API surface.
+
+### 3. Firing Natural Language Commands
+With the session active, the presenter types natural language commands directly into the terminal, such as:
+* *“List my dashboards.”*
+* *“Create a new dashboard for CPU and memory utilization.”*
+
+### 4. Gemini CLI as the Intelligent Orchestrator
+When the SRE hits `Enter`:
+1. **Intent Parsing**: The Gemini CLI processes the request and determines what the SRE wants to achieve.
+2. **Tool Selection**: Gemini scans its active MCP directory and dynamically selects which of the **52 Grafana MCP tools** to invoke (e.g. mapping *“List my dashboards”* to `mcp_grafana_search_dashboards`).
+3. **Local Execution**: The CLI calls the target tool on the locally running Grafana MCP Server.
+
+### 5. API Gateway & Scraper Retrieval
+The local MCP server securely forwards the request over HTTP (using your configured credentials and `org=1`) to the **Grafana API** running in GKE. 
+* To resolve queries like pod resource usage, Grafana fetches live metrics from **Prometheus**, which scrapes node-level and pod-level data inside the cluster.
+
+### 6. Terminal Presentation
+The retrieved data or success confirmation flows back from Grafana to the local MCP server, which returns it to the Gemini CLI. Gemini then processes the raw JSON payload and prints it as a highly polished, human-readable markdown table directly in the SRE's active terminal.
 
 ---
 
@@ -302,7 +367,7 @@ Let Gemini analyze your actual Kubernetes targets:
 1. **Ask Gemini for a high-level status of CPU utilization:**
    > *"Sanket: Run a PromQL query on my datasource to check the CPU usage of our pods."*
 2. **Dynamic Querying:**
-   > *(Gemini CLI invokes `mcp_grafana_query_prometheus` using the expression parsed from your local configuration: `sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[5m])) by (pod)` and reports the live utilization metrics in clean markdown tables.)*
+   > *(Gemini CLI invokes `mcp_grafana_query_prometheus` using the expression parsed from your local configuration: `sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)` and reports the live utilization metrics in clean markdown tables.)*
 
 ---
 
