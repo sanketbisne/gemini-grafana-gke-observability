@@ -157,6 +157,108 @@ Run the following installation command in your terminal where Gemini CLI is inst
 gemini extensions install https://github.com/grafana/mcp-grafana
 ```
 
+During installation, Gemini CLI will prompt you for three configuration values:
+
+| Prompt | What to Enter | Example |
+|---|---|---|
+| **Grafana URL** | The external IP or URL of your Grafana service | `http://34.172.90.124` |
+| **Service Account Token** | A Grafana API token (see below how to create one) | `glsa_Qn1Qc5Xv...` |
+| **Organization ID** | The Grafana org to target | `1` |
+
+---
+
+### 🔑 Step A: Generate a Grafana Service Account Token
+
+Before Gemini CLI can talk to your Grafana instance, you need to create an API token. Follow these steps inside the **Grafana UI**:
+
+1. **Open Grafana** in your browser using the external IP:
+   ```
+   http://<EXTERNAL_IP>
+   ```
+2. Navigate to **Administration** (gear icon in the left sidebar) → **Service Accounts**
+3. Click **"Add service account"**
+   - **Display name**: `gemini-cli`
+   - **Role**: `Admin` (required for creating dashboards and full access)
+4. Click **"Create"**
+5. On the service account page, click **"Add service account token"**
+   - **Token name**: `gemini-mcp-token`
+   - **Expiration**: Set as needed (or "No expiration" for demos)
+6. Click **"Generate token"**
+7. **Copy the token immediately** — it starts with `glsa_` and will only be shown once:
+   ```
+   glsa_YOUR_SERVICE_ACCOUNT_TOKEN_HERE
+   ```
+
+> [!CAUTION]
+> The token is only displayed **once**. If you lose it, you'll need to generate a new one. Never commit tokens to version control.
+
+---
+
+### 📂 Understanding the Extension Directory
+
+After running `gemini extensions install`, all extension files are stored locally on your machine at:
+
+```
+~/.gemini/extensions/grafana/
+```
+
+Here's what each file does:
+
+```
+~/.gemini/extensions/grafana/
+├── .env                              # Your credentials (URL, token, org ID)
+├── .gemini-extension-install.json    # Tracks the install source & version
+├── gemini-extension.json             # Extension manifest (defines MCP server config)
+└── mcp-grafana                       # The actual MCP server binary (compiled Go)
+```
+
+#### `.env` — Your Authentication Credentials
+This is where Gemini CLI stores the connection details you entered during setup:
+
+```env
+GRAFANA_URL=http://34.172.90.124
+GRAFANA_SERVICE_ACCOUNT_TOKEN=glsa_YOUR_SERVICE_ACCOUNT_TOKEN_HERE
+GRAFANA_ORG_ID=1
+```
+
+> [!TIP]
+> If you need to update your Grafana URL or rotate the token, simply edit this `.env` file directly at `~/.gemini/extensions/grafana/.env`. No re-installation needed.
+
+#### `gemini-extension.json` — Extension Manifest
+This file defines the MCP server configuration and the three settings Gemini prompts for during install:
+
+```json
+{
+  "name": "grafana",
+  "version": "0.7.0",
+  "mcpServers": {
+    "grafana": {
+      "command": "${extensionPath}${/}mcp-grafana"
+    }
+  },
+  "settings": [
+    {
+      "name": "Grafana URL",
+      "envVar": "GRAFANA_URL",
+      "required": true
+    },
+    {
+      "name": "Service Account Token",
+      "envVar": "GRAFANA_SERVICE_ACCOUNT_TOKEN",
+      "required": true,
+      "sensitive": true
+    },
+    {
+      "name": "Organization ID",
+      "envVar": "GRAFANA_ORG_ID"
+    }
+  ]
+}
+```
+
+#### `mcp-grafana` — The MCP Server Binary
+This is the compiled Go binary (from [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) release `v0.14.0`) that Gemini CLI launches as a local subprocess. When you type a natural language query, Gemini translates it into a tool call, and this binary executes the corresponding Grafana HTTP API request using your credentials from `.env`.
+
 ---
 
 ## 🔍 Inspecting MCP Extension Capabilities
