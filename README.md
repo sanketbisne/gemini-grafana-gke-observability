@@ -1,9 +1,9 @@
-# AI-Powered Observability on GKE: Query Grafana with Gemini CLI & MCP Extensions
+# AI-Powered Observability on GKE: Query Grafana with Antigravity CLI & MCP Extensions
 
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-blue.svg?logo=kubernetes&style=flat-square)](#)
 [![Grafana](https://img.shields.io/badge/Grafana-10.0.0-orange.svg?logo=grafana&style=flat-square)](#)
 [![Prometheus](https://img.shields.io/badge/Prometheus-v2.45.0-red.svg?logo=prometheus&style=flat-square)](#)
-[![Gemini](https://img.shields.io/badge/Gemini_CLI-MCP_Extensions-purple.svg?logo=google-gemini&style=flat-square)](#)
+[![Antigravity](https://img.shields.io/badge/Antigravity_CLI-MCP_Extensions-purple.svg?logo=google-gemini&style=flat-square)](#)
 
 > **📍 Presented at GrafanaCon by [Sanket Bisne](https://github.com/sanketbisne)** — Cloud / DevOps / Platform Engineer
 
@@ -11,7 +11,7 @@
 
 Ever wished you could just *ask* your monitoring system what's going on instead of clicking through dashboards? That's exactly what this project does.
 
-This repo sets up a complete **Kubernetes observability stack** (Prometheus + Grafana) on **Google Kubernetes Engine (GKE)** and connects it to **Gemini CLI** — Google's AI-powered command-line tool. Using the [Grafana MCP Server](https://github.com/grafana/mcp-grafana) extension, you can talk to your dashboards, query metrics, and even create new dashboards — all through **natural language** in your terminal.
+This repo sets up a complete **Kubernetes observability stack** (Prometheus + Grafana) on **Google Kubernetes Engine (GKE)** and connects it to **Antigravity CLI** — Google's AI-powered command-line tool. Using the [Grafana MCP Server](https://github.com/grafana/mcp-grafana) extension, you can talk to your dashboards, query metrics, and even create new dashboards — all through **natural language** in your terminal.
 
 ### What can you do with it?
 
@@ -29,8 +29,8 @@ This repo sets up a complete **Kubernetes observability stack** (Prometheus + Gr
 | **Google Kubernetes Engine (GKE)** | Hosts the entire observability stack |
 | **Prometheus** | Collects and stores metrics from Kubernetes nodes, pods, and applications |
 | **Grafana** | Visualizes metrics through dashboards and provides the API surface |
-| **Gemini CLI** | AI-powered terminal that understands natural language commands |
-| **Grafana MCP Server** | The bridge — translates Gemini's intent into Grafana API calls (52+ tools) |
+| **Antigravity CLI** | AI-powered terminal that understands natural language commands |
+| **Grafana MCP Server** | The bridge — translates Antigravity's intent into Grafana API calls (52+ tools) |
 
 ---
 
@@ -61,7 +61,7 @@ graph TD
     end
 
     subgraph Dev["Developer Laptop"]
-        CLI["Gemini CLI"]
+        CLI["Antigravity CLI"]
         MCP["mcp-grafana extension"]
     end
 
@@ -83,7 +83,7 @@ Follow these steps to deploy the entire stack to your Google Kubernetes Engine (
 ### Prerequisites
 * A running **GKE Cluster**
 * **kubectl** configured to access your cluster
-* **Gemini CLI** installed on your workstation
+* **Antigravity CLI** installed on your workstation
 * Grafana access token with Admin privileges
 
 ---
@@ -138,7 +138,7 @@ Ensure all pods are in a `Running` state:
 kubectl get pods
 ```
 
-Retrieve the external IP of the Grafana service to access the dashboard and use it for Gemini CLI setup:
+Retrieve the external IP of the Grafana service to access the dashboard and use it for Antigravity CLI setup:
 
 ```bash
 kubectl get svc grafana -w
@@ -146,18 +146,19 @@ kubectl get svc grafana -w
 
 ---
 
-## 🤖 Integrating Gemini CLI with Grafana (MCP)
+## 🤖 Integrating Antigravity CLI with Grafana (MCP)
 
-To enable conversational observability, you will install the official Grafana Model Context Protocol (MCP) server directly inside the Gemini CLI. This allows Gemini to invoke APIs under the hood when you ask questions about dashboards, panels, and metrics.
+To enable conversational observability, you will install the official Grafana Model Context Protocol (MCP) server directly inside the Antigravity CLI. This allows Antigravity to invoke APIs under the hood when you ask questions about dashboards, panels, and metrics.
 
 ### 🔌 Installation
-Run the following installation command in your terminal where Gemini CLI is installed:
+Run the following installation command in your terminal where Antigravity CLI is installed:
 
 ```bash
-gemini extensions install https://github.com/grafana/mcp-grafana
+curl -fsSL https://antigravity.google/cli/install.sh | bash
+agy extension install https://github.com/grafana/mcp-grafana
 ```
 
-During installation, Gemini CLI will prompt you for three configuration values:
+During installation, Antigravity CLI will prompt you for three configuration values:
 
 | Prompt | What to Enter | Example |
 |---|---|---|
@@ -169,7 +170,7 @@ During installation, Gemini CLI will prompt you for three configuration values:
 
 ### 🔑 Step A: Generate a Grafana Service Account Token
 
-Before Gemini CLI can talk to your Grafana instance, you need to create an API token. Follow these steps inside the **Grafana UI**:
+Before Antigravity CLI can talk to your Grafana instance, you need to create an API token. Follow these steps inside the **Grafana UI**:
 
 1. **Open Grafana** in your browser using the external IP:
    ```
@@ -177,11 +178,11 @@ Before Gemini CLI can talk to your Grafana instance, you need to create an API t
    ```
 2. Navigate to **Administration** (gear icon in the left sidebar) → **Service Accounts**
 3. Click **"Add service account"**
-   - **Display name**: `gemini-cli`
+   - **Display name**: `agy-cli`
    - **Role**: `Admin` (required for creating dashboards and full access)
 4. Click **"Create"**
 5. On the service account page, click **"Add service account token"**
-   - **Token name**: `gemini-mcp-token`
+   - **Token name**: `agy-mcp-token`
    - **Expiration**: Set as needed (or "No expiration" for demos)
 6. Click **"Generate token"**
 7. **Copy the token immediately** — it starts with `glsa_` and will only be shown once:
@@ -196,24 +197,25 @@ Before Gemini CLI can talk to your Grafana instance, you need to create an API t
 
 ### 📂 Understanding the Extension Directory
 
-After running `gemini extensions install`, all extension files are stored locally on your machine at:
+After running `curl -fsSL https://antigravity.google/cli/install.sh | bash
+agy extension install`, all extension files are stored locally on your machine at:
 
 ```
-~/.gemini/extensions/grafana/
+~/.agy/extensions/grafana/
 ```
 
 Here's what each file does:
 
 ```
-~/.gemini/extensions/grafana/
+~/.agy/extensions/grafana/
 ├── .env                              # Your credentials (URL, token, org ID)
-├── .gemini-extension-install.json    # Tracks the install source & version
+├── .agy-extension-install.json    # Tracks the install source & version
 ├── gemini-extension.json             # Extension manifest (defines MCP server config)
 └── mcp-grafana                       # The actual MCP server binary (compiled Go)
 ```
 
 #### `.env` — Your Authentication Credentials
-This is where Gemini CLI stores the connection details you entered during setup:
+This is where Antigravity CLI stores the connection details you entered during setup:
 
 ```env
 GRAFANA_URL=http://34.172.90.124
@@ -222,10 +224,10 @@ GRAFANA_ORG_ID=1
 ```
 
 > [!TIP]
-> If you need to update your Grafana URL or rotate the token, simply edit this `.env` file directly at `~/.gemini/extensions/grafana/.env`. No re-installation needed.
+> If you need to update your Grafana URL or rotate the token, simply edit this `.env` file directly at `~/.agy/extensions/grafana/.env`. No re-installation needed.
 
 #### `gemini-extension.json` — Extension Manifest
-This file defines the MCP server configuration and the three settings Gemini prompts for during install:
+This file defines the MCP server configuration and the three settings Antigravity prompts for during install:
 
 ```json
 {
@@ -257,16 +259,16 @@ This file defines the MCP server configuration and the three settings Gemini pro
 ```
 
 #### `mcp-grafana` — The MCP Server Binary
-This is the compiled Go binary (from [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) release `v0.14.0`) that Gemini CLI launches as a local subprocess. When you type a natural language query, Gemini translates it into a tool call, and this binary executes the corresponding Grafana HTTP API request using your credentials from `.env`.
+This is the compiled Go binary (from [grafana/mcp-grafana](https://github.com/grafana/mcp-grafana) release `v0.14.0`) that Antigravity CLI launches as a local subprocess. When you type a natural language query, Antigravity translates it into a tool call, and this binary executes the corresponding Grafana HTTP API request using your credentials from `.env`.
 
 ---
 
 ## 🔍 Inspecting MCP Extension Capabilities
 
-Once the extension is installed, you can query and inspect the active tools in your Gemini session.
+Once the extension is installed, you can query and inspect the active tools in your Antigravity session.
 
 ### Running `/mcp list` or `mcp list`
-Typing `mcp list` in the Gemini CLI will display all connected MCP Servers and their respective toolsets. When configured with Grafana, you will see a dynamic output similar to:
+Typing `mcp list` in the Antigravity CLI will display all connected MCP Servers and their respective toolsets. When configured with Grafana, you will see a dynamic output similar to:
 
 ```text
 ✦ I have access to several Model Context Protocol (MCP) servers that extend my capabilities. Here is a summary of the available toolsets:
@@ -349,9 +351,9 @@ If you query details about active tools using `/mcp list`, it reveals the **52 h
 
 ## 🛡️ SRE Security: The Interactive Consent UI
 
-One of the key security pillars in Gemini CLI is its **explicit human-in-the-loop consent mechanism**. Gemini will never run a destructive or analytical action against your live systems without asking.
+One of the key security pillars in Antigravity CLI is its **explicit human-in-the-loop consent mechanism**. Antigravity will never run a destructive or analytical action against your live systems without asking.
 
-When you ask Gemini CLI to run an observation command:
+When you ask Antigravity CLI to run an observation command:
 > *"List my Grafana dashboards"*
 
 The CLI intercepts the matching MCP tool (`list_datasources` or `search_dashboards`) and presents a visual consent modal in the terminal:
@@ -380,7 +382,7 @@ This security mechanism gives operators full control over the execution scope: f
 
 ## 🧠 SRE Agent Intelligence: Local Workspace Awareness & Fallback
 
-A standout feature of Gemini CLI is **contextual local workspace awareness**. If the live Grafana connection encounters issues (e.g. invalid credentials, networking problems, or a `401 Unauthorized` token error), the agent does not just crash or show a blank screen.
+A standout feature of Antigravity CLI is **contextual local workspace awareness**. If the live Grafana connection encounters issues (e.g. invalid credentials, networking problems, or a `401 Unauthorized` token error), the agent does not just crash or show a blank screen.
 
 ### Real-World Demo Scenario: Gracious API Token Fallback
 If the live connection fails:
@@ -404,39 +406,69 @@ If the live connection fails:
 **Why this is a killer talking point at GrafanaCon:**
 * **Local Parsing**: The agent autonomously notices `grafana.yaml` in the user's open files or active workspace directory.
 * **Intelligent Synthesis**: It parses the ConfigMap inside `grafana.yaml`, extracts the JSON definition of the dashboard (`Kubernetes Resource Usage` with UID `k8s-resources`), identifies the metric panels, and serves the user with the PromQL expressions directly.
-* **Hybrid Operation**: This demonstrates how Gemini blends live runtime connections with local code context for an uninterrupted SRE workspace experience.
+* **Hybrid Operation**: This demonstrates how Antigravity blends live runtime connections with local code context for an uninterrupted SRE workspace experience.
 
 ---
 
 ## 🎙️ The Live Demo Storyline: SRE Step-by-Step Flow
 
-When presenting this live demo at **GrafanaCon**, this is the narrative flow that demonstrates the end-to-end synergy between the user, Gemini CLI, the local MCP extension, and GKE observability:
+When presenting this live demo at **GrafanaCon**, this is the narrative flow that demonstrates the end-to-end synergy between the user, Antigravity CLI, the local MCP extension, and GKE observability:
 
 ![SRE Conversational Observability Flow](architecture.png)
 
 ### 1. The SRE Laptop Setup
 An operator opens their laptop, opens the terminal, and starts a conversational session by running:
 ```bash
-gemini
+agy
 ```
-This opens the interactive **Gemini CLI** workspace, acting as the centralized command center for operations.
+
+```text
+      ▄▀▀▄        Antigravity CLI 1.0.2
+     ▀▀▀▀▀▀       sanketbisne@gmail.com (Google AI Pro)
+    ▀▀▀▀▀▀▀▀      Gemini 3.5 Flash (Medium)
+   ▄▀▀    ▀▀▄     ~/k8s
+  ▄▀▀      ▀▀▄
+
+> /mcp
+  ⎿  Restarted server: cloud-run
+
+> /mcp
+  ⎿  Restarted server: grafana
+
+────────────────────────────────────────────────────────────
+> list my grafana dashboard
+
+● ListDir(/Users/sanketbisne/.gemini/antigravity-cli/mcp/grafana) 
+● Read(/Users/sanketbisne/.gemini/antigravity-cli/mcp/grafana/list_dashboards.json) 
+● grafana/list_dashboards(List Grafana dashboards) (ctrl+o to expand)
+
+  Here is your Grafana dashboard:
+
+  • Title: Kubernetes Resource Usage
+  • UID:  k8s-resources 
+  • ID:  1 
+  • URL Path:  /d/k8s-resources/kubernetes-resource-usage 
+```
+
+This opens the interactive **Antigravity CLI** workspace, acting as the centralized command center for operations.
 
 ### 2. Installing the Grafana Extension (Local MCP Host)
-To hook Gemini up to Grafana, the presenter runs:
+To hook Antigravity up to Grafana, the presenter runs:
 ```bash
-gemini extensions install https://github.com/grafana/mcp-grafana
+curl -fsSL https://antigravity.google/cli/install.sh | bash
+agy extension install https://github.com/grafana/mcp-grafana
 ```
-* **Under the hood**: This single command downloads, configures, and initializes the **Grafana MCP Server** locally on the SRE's laptop. The extension acts as a translator between Gemini's LLM reasoning and the Grafana API surface.
+* **Under the hood**: This single command downloads, configures, and initializes the **Grafana MCP Server** locally on the SRE's laptop. The extension acts as a translator between Antigravity's LLM reasoning and the Grafana API surface.
 
 ### 3. Firing Natural Language Commands
 With the session active, the presenter types natural language commands directly into the terminal, such as:
 * *“List my dashboards.”*
 * *“Create a new dashboard for CPU and memory utilization.”*
 
-### 4. Gemini CLI as the Intelligent Orchestrator
+### 4. Antigravity CLI as the Intelligent Orchestrator
 When the SRE hits `Enter`:
-1. **Intent Parsing**: The Gemini CLI processes the request and determines what the SRE wants to achieve.
-2. **Tool Selection**: Gemini scans its active MCP directory and dynamically selects which of the **52 Grafana MCP tools** to invoke (e.g. mapping *“List my dashboards”* to `mcp_grafana_search_dashboards`).
+1. **Intent Parsing**: The Antigravity CLI processes the request and determines what the SRE wants to achieve.
+2. **Tool Selection**: Antigravity scans its active MCP directory and dynamically selects which of the **52 Grafana MCP tools** to invoke (e.g. mapping *“List my dashboards”* to `mcp_grafana_search_dashboards`).
 3. **Local Execution**: The CLI calls the target tool on the locally running Grafana MCP Server.
 
 ### 5. API Gateway & Scraper Retrieval
@@ -444,7 +476,7 @@ The local MCP server securely forwards the request over HTTP (using your configu
 * To resolve queries like pod resource usage, Grafana fetches live metrics from **Prometheus**, which scrapes node-level and pod-level data inside the cluster.
 
 ### 6. Terminal Presentation
-The retrieved data or success confirmation flows back from Grafana to the local MCP server, which returns it to the Gemini CLI. Gemini then processes the raw JSON payload and prints it as a highly polished, human-readable markdown table directly in the SRE's active terminal.
+The retrieved data or success confirmation flows back from Grafana to the local MCP server, which returns it to the Antigravity CLI. Antigravity then processes the raw JSON payload and prints it as a highly polished, human-readable markdown table directly in the SRE's active terminal.
 
 ---
 
@@ -453,9 +485,9 @@ The retrieved data or success confirmation flows back from Grafana to the local 
 Use these highly interactive scenarios during the GrafanaCon presentation to showcase real-world workflows.
 
 ### Scenario A: Dashboard Discovery & Inspection
-Instead of manually navigating the UI, ask Gemini to inspect your Grafana instance.
+Instead of manually navigating the UI, ask Antigravity to inspect your Grafana instance.
 
-| SRE Natural Language Query | What Gemini Does Behind the Scenes (MCP Tools) |
+| SRE Natural Language Query | What Antigravity Does Behind the Scenes (MCP Tools) |
 |---|---|
 | *"What dashboards are currently configured in my Grafana instance?"* | Invokes `mcp_grafana_search_dashboards` to fetch the metadata of all loaded boards. |
 | *"Describe the panels inside the 'Kubernetes Resource Usage' dashboard."* | Invokes `mcp_grafana_get_dashboard_by_uid` with UID `k8s-resources` to outline the panels ("CPU Usage by Pod", "Memory Usage by Pod"). |
@@ -464,12 +496,12 @@ Instead of manually navigating the UI, ask Gemini to inspect your Grafana instan
 ---
 
 ### Scenario B: Diagnostic Reasoning & Metrics Scraper Check
-Let Gemini analyze your actual Kubernetes targets:
+Let Antigravity analyze your actual Kubernetes targets:
 
-1. **Ask Gemini for a high-level status of CPU utilization:**
+1. **Ask Antigravity for a high-level status of CPU utilization:**
    > *"Sanket: Run a PromQL query on my datasource to check the CPU usage of our pods."*
 2. **Dynamic Querying:**
-   > *(Gemini CLI invokes `mcp_grafana_query_prometheus` using the expression parsed from your local configuration: `sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)` and reports the live utilization metrics in clean markdown tables.)*
+   > *(Antigravity CLI invokes `mcp_grafana_query_prometheus` using the expression parsed from your local configuration: `sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)` and reports the live utilization metrics in clean markdown tables.)*
 
 ---
 
@@ -482,3 +514,22 @@ Let Gemini analyze your actual Kubernetes targets:
 
 > [!TIP]
 > **For the Live Demo at GrafanaCon:** Make sure to port-forward Prometheus (`kubectl port-forward svc/prometheus-service 9090:9090`) and Grafana (`kubectl port-forward svc/grafana 3000:80`) if you are running on a local cluster like Minikube, or use the `LoadBalancer` external IP on GKE for seamless external access.
+
+### Scenario C: Generative Dashboard Creation (The "Wow" Factor)
+Show off the power of LLM reasoning by asking Antigravity to build a complex dashboard from scratch using natural language.
+
+1. **Dashboard as Code (Local Context)**
+   If you want Antigravity to modify your local `grafana.yaml` file instead of hitting the live API:
+   > *"Create a new Grafana dashboard titled 'Golden Signals: Sample App'. I want it to contain 3 panels measuring the health of our 'sample-app' pods. Panel 1 should be a timeseries showing the rate of CPU usage over the last 5 minutes. Panel 2 should be a gauge showing current memory working set bytes. Panel 3 should be a stat panel showing the filesystem usage. Use the 'Prometheus' datasource for all panels."*
+
+2. **Live API Creation (MCP Tooling)**
+   If you want to bypass local files and force the agent to use the `update_dashboard` MCP tool to create it live:
+   > *"Use the Grafana MCP extension tool to create a new dashboard titled 'Live System Health'. Add a panel showing overall CPU usage using the Prometheus datasource. IMPORTANT: Do NOT modify any local files or YAML configs. You must use the `update_dashboard` MCP API tool directly to push this to the Grafana server."*
+
+---
+
+### Scenario D: On-the-fly Image Rendering & Sharing
+Show how to quickly share visual insights without opening the browser.
+
+> *"Fetch a rendered PNG image of the 'Kubernetes Resource Usage' dashboard for the last 1 hour and show it to me here."*
+> *"Generate a deep link to the 'Sample App Resource Usage' dashboard so I can drop it in Slack."*
