@@ -499,9 +499,11 @@ Instead of manually navigating the UI, ask Antigravity to inspect your Grafana i
 Let Antigravity analyze your actual Kubernetes targets:
 
 1. **Ask Antigravity for a high-level status of CPU utilization:**
-   > *"Sanket: Run a PromQL query on my datasource to check the CPU usage of our pods."*
+   > *"Run a PromQL query on my datasource to check the CPU usage of our pods."*
 2. **Dynamic Querying:**
    > *(Antigravity CLI invokes `mcp_grafana_query_prometheus` using the expression parsed from your local configuration: `sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)` and reports the live utilization metrics in clean markdown tables.)*
+3. **Follow-up Memory Query:**
+   > *"Now run a query to show me the current memory working set of the 'sample-app' pods."*
 
 ---
 
@@ -533,3 +535,26 @@ Show how to quickly share visual insights without opening the browser.
 
 > *"Fetch a rendered PNG image of the 'Kubernetes Resource Usage' dashboard for the last 1 hour and show it to me here."*
 > *"Generate a deep link to the 'Sample App Resource Usage' dashboard so I can drop it in Slack."*
+
+---
+
+### Scenario E: Troubleshooting Scenarios
+Act like there is a problem and see how the AI responds and correlates data.
+
+> *"My sample-app seems slow. Can you check the Prometheus metrics and the Grafana dashboards to see if there are any CPU spikes or memory leaks?"*
+
+---
+
+## Quick Copy-Paste Prompts
+
+What dashboards are currently configured in my Grafana instance?
+
+Describe the panels inside the 'Kubernetes Resource Usage' dashboard. What exactly is it measuring?
+
+Run a PromQL query on my datasource to check the CPU usage of our pods.
+
+Now run a query to show me the current memory working set of the 'sample-app' pods.
+
+Create a new Grafana dashboard titled 'Golden Signals: Sample App'. I want it to contain 3 panels measuring the health of our 'sample-app' pods. Panel 1 should be a timeseries showing the rate of CPU usage over the last 5 minutes. Panel 2 should be a gauge showing current memory working set bytes. Panel 3 should be a stat panel showing the filesystem usage. Use the 'Prometheus' datasource for all panels.
+
+My sample-app seems slow. Can you check the Prometheus metrics and the Grafana dashboards to see if there are any CPU spikes or memory leaks?
